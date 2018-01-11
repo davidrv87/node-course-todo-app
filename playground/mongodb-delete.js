@@ -15,24 +15,24 @@ MongoClient.connect(`mongodb://localhost:27017/${dbName}`, (err, client) => {
     var db = client.db(dbName);
     console.log('Connected to MongoDB server');
 
-    // // deleteMany
-    // db.collection('Todos').deleteMany({text: 'Something to do 1'}).then((result) => {
-    //     console.log('Object deleted succesfully', result.result);
-    // }, (err) => {
-    //     console.log('Unable to delete the document', err);
-    // });
+    // deleteMany
+    db.collection('Todos').deleteMany({text: 'Something to do 1'}).then((result) => {
+        console.log('Object deleted succesfully', result.result);
+    }, (err) => {
+        console.log('Unable to delete the document', err);
+    });
 
-    // // deleteOne
-    // db.collection('Todos').deleteOne({text: 'Something to do 123'}).then((result) => {
-    //     console.log('Object deleted successfully', result.result);
-    // }, (err) => {
-    //     console.log('Unable to delete the document', err);
-    // });
+    // deleteOne
+    db.collection('Todos').deleteOne({text: 'Something to do 123'}).then((result) => {
+        console.log('Object deleted successfully', result.result);
+    }, (err) => {
+        console.log('Unable to delete the document', err);
+    });
 
-    // // findOneAndDelete: get the data back of the document deleted (undo button)
-    // db.collection('Todos').findOneAndDelete({completed: false}).then((result) => {
-    //     console.log(result);
-    // });
+    // findOneAndDelete: get the data back of the document deleted (undo button)
+    db.collection('Todos').findOneAndDelete({completed: false}).then((result) => {
+        console.log(result);
+    });
 
     db.collection('Users').findOneAndDelete({
         _id: new ObjectID('5a56e60618dabe4eba1f12b9')
