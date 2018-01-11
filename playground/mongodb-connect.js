@@ -25,7 +25,7 @@ MongoClient.connect(`mongodb://localhost:27017/${dbName}`, (err, client) => {
 
     // 'Todos' is the name of the connection. If it does not exist, it is created
     db.collection('Todos').insertOne({
-        text: 'Something to do',
+        text: 'Something to do 123',
         completed: false
     }, (err, result) => {
         if (err) {
