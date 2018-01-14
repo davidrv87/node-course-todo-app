@@ -19,10 +19,8 @@ app.post('/todos', (req, res) => {
     });
 
     todo.save().then((doc) => {
-        console.log('Saved todo');
         res.send(doc);
     }, (err) => {
-        console.log('Unable to save todo');
         res.status(400).send(err);
     });
 });
@@ -42,11 +40,11 @@ app.get('/todos/:id', (req, res) => {
         return res.status(404).send(`ID ${id} is not valid`);
     }
 
-    Todo.findById(id).then((todos) => {
-        if (!todos) {
+    Todo.findById(id).then((todo) => {
+        if (!todo) {
             return res.status(404).send('Todo not found');
         }
-        res.send({todos});
+        res.send({todo});
     }, (err) => {
         res.status(400).send(err);
     });

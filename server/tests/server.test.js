@@ -2,17 +2,22 @@
 
 const expect  = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 var {app}     = require('../server');
 var {Todo}    = require('../models/todo');
 
+var id = '5a59ce6c9af15409929c2266';
+const todos = [{
+    _id: new ObjectID(id),
+    text: 'First todo test'
+}, {
+    _id: new ObjectID(),
+    text: 'Second todo test'
+}];
+
 describe('POST /todos', () => {
 
-    const todos = [{
-        text: 'First todo test'
-    }, {
-        text: 'Second todo test'
-    }];
 
     beforeEach((done) => {
         // Empty the collection before each test and put some dummy data
@@ -73,11 +78,55 @@ describe('GET /todos', () => {
             .get('/todos')
             .expect(200)
             .expect((response) => {
-                console.log(response.body.todos);
+                // console.log(response.body.todos);
                 expect(response.body.todos.length).toBe(2);
                 // expect(response.body.todos).toInclude({text: 'First todo test'});
                 // expect(response.body.todos).toInclude({text: 'Second todo test'});
             })
+            .end(done);
+    });
+});
+
+describe('GET /todos/:id', () => {
+
+    it('should get todo by id (Option 1)', (done) => {
+        request(app)
+            .get(`/todos/${id}`)
+            .expect(200)
+            .expect((response) => {
+                expect(response.body.todo).toInclude({_id: id});
+                expect(response.body.todo._id).toBe(id);
+                expect(response.body.todo.text).toBe(todos[0].text);
+            })
+            .end(done);
+    });
+
+    it('should get todo by id (Option 2)', (done) => {
+        request(app)
+            .get(`/todos/${todos[1]._id.toHexString()}`) // toHexString() converts to String
+            .expect(200)
+            .expect((response) => {
+                expect(response.body.todo._id).toBe(todos[1]._id.toHexString());
+                expect(response.body.todo.text).toBe(todos[1].text);
+            })
+            .end(done);
+    });
+
+    it('should not accept invalid ID', (done) => {
+        var invalidID = '12345';
+        request(app)
+            .get(`/todos/${invalidID}`)
+            .expect(404)
+            .expect(`ID ${invalidID} is not valid`)
+            .end(done);
+    });
+
+    it('should inform todo is not found', (done) => {
+        var notFoundID = new ObjectID().toHexString();
+        request(app)
+            .get(`/todos/${notFoundID}`)
+            .expect(404)
+            .expect('Todo not found')
             .end(done);
     });
 });
