@@ -18,13 +18,16 @@ var port = process.env.PORT;
 // Config the middleware
 app.use(bodyParser.json());
 
+/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// TODOS /////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+
 app.post('/todos', (req, res) => {
-    var todo = new Todo({
-        text: req.body.text
-    });
+    var body = _.pick(req.body, ['text']);
+    var todo = new Todo(body);
 
     todo.save().then((doc) => {
-        res.send(doc);
+        res.send({doc});
     }, (err) => {
         res.status(400).send(err);
     });
@@ -105,6 +108,24 @@ app.patch('/todos/:id', (req, res) => {
     }).catch((err) => {
         res.status(400).send();
     });
+});
+
+/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// USERS /////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+
+app.post('/users', (req, res) => {
+    var body = _.pick(req.body, ['email', 'password']);
+    var user = new User(body);
+
+    user.save().then(() => {
+        // When we save the user, generate the token
+        return user.generateAuthToken();
+    }).then((token) => {
+        // Then send back the token to the user
+        // Adding 'x-' creates a custom header
+        res.header('x-auth', token).send(user);
+    }).catch((err) => res.status(400).send(err));
 });
 
 app.listen(port, () => {
