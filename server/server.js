@@ -2,7 +2,8 @@
 
 const express    = require('express');
 const bodyParser = require('body-parser');
-var {ObjectID}   = require('mongodb');
+const _          = require('lodash');
+const {ObjectID} = require('mongodb');
 
 var {mongoose}   = require('./db/mongoose');
 var {Todo}       = require('./models/todo');
@@ -67,6 +68,39 @@ app.delete('/todos/:id', (req, res) => {
         res.send({todo});
     }).catch((err) => {
         res.status(400).send(`Todo ${id} could not be deleted`);
+    });
+});
+
+app.patch('/todos/:id', (req, res) => {
+    var id = req.params.id;
+    // To prevent properties to be updated that they shouldn't (ie completeAt), pull only the properties
+    // from the body that was sent. Use _.pick() for this purpose
+    var body = _.pick(req.body, ['text', 'completed']);
+
+    if (!ObjectID.isValid(id)) {
+        return res.status(404).send(`ID ${id} is not valid`);
+    }
+
+    // Check if the user has set the task to completed
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    Todo.findByIdAndUpdate(id, {
+        $set: body
+    }, {
+        new: true // same as returnOriginal: false
+    }).then((todo) => {
+        if (!todo) {
+            res.status(404).send(`ID ${id} not found`);
+        }
+
+        res.send({todo});
+    }).catch((err) => {
+        res.status(400).send();
     });
 });
 
