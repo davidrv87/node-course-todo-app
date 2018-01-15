@@ -1,5 +1,8 @@
 "use strict";
 
+// Load the config
+require('./config/config');
+
 const express    = require('express');
 const bodyParser = require('body-parser');
 const _          = require('lodash');
@@ -9,8 +12,8 @@ var {mongoose}   = require('./db/mongoose');
 var {Todo}       = require('./models/todo');
 var {User}       = require('./models/user');
 
-var app = express();
-var port = process.env.PORT || 3000;
+var app          = express();
+var port = process.env.PORT;
 
 // Config the middleware
 app.use(bodyParser.json());
