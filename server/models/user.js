@@ -66,6 +66,27 @@ UserSchema.methods.generateAuthToken = function() {
     });
 };
 
+// Model method as opposed to instance methods as the ones above
+UserSchema.statics.findByToken = function(token) {
+    var User = this; // Note that we use the model (User) instead of the instance (user)
+    var decoded;
+    var user;
+
+    try {
+        decoded = jwt.verify(token, 'abc123');
+    } catch (e) {
+        // We return a Promise that rejects so the success path in .then() will never fire
+        return Promise.reject('Authentication required'); // The argument will be the 'err' in the .catch((err))
+    }
+
+    return User.findOne({
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    });
+
+};
+
 // Define the User model
 var User = mongoose.model('User', UserSchema);
 
