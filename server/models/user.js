@@ -4,6 +4,7 @@ const mongoose  = require('mongoose');
 const validator = require('validator');
 const jwt       = require('jsonwebtoken');
 const _         = require('lodash');
+const bcrypt    = require('bcryptjs');
 
 // Define the User Schema
 var UserSchema = new mongoose.Schema({
@@ -70,7 +71,6 @@ UserSchema.methods.generateAuthToken = function() {
 UserSchema.statics.findByToken = function(token) {
     var User = this; // Note that we use the model (User) instead of the instance (user)
     var decoded;
-    var user;
 
     try {
         decoded = jwt.verify(token, 'abc123');
@@ -84,8 +84,24 @@ UserSchema.statics.findByToken = function(token) {
         'tokens.token': token,
         'tokens.access': 'auth'
     });
-
 };
+
+// Attach a middleware to hash the password before saving the new user to the database
+UserSchema.pre('save', function (next) {
+    var user = this;
+
+    // We want to hash the password if it was modified
+    if (user.isModified('password')) {
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash;
+                next();
+            });
+        });
+    } else {
+        next();
+    }
+});
 
 // Define the User model
 var User = mongoose.model('User', UserSchema);
