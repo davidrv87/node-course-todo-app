@@ -86,6 +86,29 @@ UserSchema.statics.findByToken = function(token) {
     });
 };
 
+// Method to find a user using email and password
+UserSchema.statics.findByCredentials = function(email, password) {
+    var User = this;
+
+    return User.findOne({email}).then((user) => {
+        if (!user) {
+            return Promise.reject('User not found');
+        }
+
+        // bcrypt works with callback, but we want to return a Promise
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password, user.password, (err, res) => {
+                if (res) {
+                    resolve(user);
+                } else {
+                    reject('Email or password do not match');
+                }
+
+            });
+        });
+    });
+};
+
 // Attach a middleware to hash the password before saving the new user to the database
 UserSchema.pre('save', function (next) {
     var user = this;
