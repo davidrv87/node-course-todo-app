@@ -23,8 +23,9 @@ app.use(bodyParser.json());
 ///////////////////////////////// TODOS /////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
     var body = _.pick(req.body, ['text']);
+    _.set(body, '_creator', req.user._id);
     var todo = new Todo(body);
 
     todo.save().then((doc) => {
@@ -34,22 +35,25 @@ app.post('/todos', (req, res) => {
     });
 });
 
-app.get('/todos', (req, res) => {
-    Todo.find().then((todos) => {
+app.get('/todos', authenticate, (req, res) => {
+    Todo.find({_creator: req.user._id}).then((todos) => {
         res.send({todos}); // Send the object instead of an array (ES6 Syntax)
     }, (err) => {
         res.status(400).send(err);
     });
 });
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
 
     if (!ObjectID.isValid(id)) {
         return res.status(404).send(`ID ${id} is not valid`);
     }
 
-    Todo.findById(id).then((todo) => {
+    Todo.findOne({
+        _id: id,
+        _creator: req.user._id
+    }).then((todo) => {
         if (!todo) {
             return res.status(404).send('Todo not found');
         }
@@ -60,14 +64,17 @@ app.get('/todos/:id', (req, res) => {
     });
 });
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
 
     if (!ObjectID.isValid(id)) {
         return res.status(404).send(`ID ${id} is not valid`);
     }
 
-    Todo.findByIdAndRemove(id).then((todo) => {
+    Todo.findOneAndRemove({
+        _id: id,
+        _creator: req.user._id
+    }).then((todo) => {
         if (!todo) {
             return res.status(404).send(`ID ${id} not found`);
         }
@@ -78,7 +85,7 @@ app.delete('/todos/:id', (req, res) => {
     });
 });
 
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
     // To prevent properties to be updated that they shouldn't (ie completeAt), pull only the properties
     // from the body that was sent. Use _.pick() for this purpose
@@ -96,7 +103,10 @@ app.patch('/todos/:id', (req, res) => {
         body.completedAt = null;
     }
 
-    Todo.findByIdAndUpdate(id, {
+    Todo.findOneAndUpdate({
+        _id: id,
+        _creator: req.user._id
+    }, {
         $set: body
     }, {
         new: true // same as returnOriginal: false
